@@ -12,6 +12,8 @@ import javax.persistence.Table;
 
 import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 
 @Entity
@@ -42,6 +44,7 @@ public class Livrable implements Serializable {
 	private List<Object> lieux;
 	
 	@Column(nullable = false,length=45)
+        @Enumerated(EnumType.STRING)
     @ApiModelProperty(value="etat du livrable", required=true)
 	private Etat etat;
 	

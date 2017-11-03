@@ -1,9 +1,6 @@
 package com.bootcamp.tp.service;
 
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -62,12 +59,12 @@ public class LivrableRestService {
 			responseContainer="Livrable"
 			)
 	@ApiResponses({
-		@ApiResponse(code=200, message="Livrable retrouvé"),
-	     @ApiResponse(code=404, message="Livrable non trouvé")
+            @ApiResponse(code=200, message="Livrable retrouvé"),
+	    @ApiResponse(code=404, message="Livrable non trouvé")
 	})
 	public Response getById(@PathParam("id") int id) throws SQLException {
 
-		Livrable livrable = livrableRepository.findByPropertyUnique("id", id);
+		Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", id);
 
 		if(livrable != null)
 			return Response.status(200).entity(livrable).build();

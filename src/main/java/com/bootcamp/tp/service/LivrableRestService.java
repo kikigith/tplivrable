@@ -16,143 +16,210 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.bootcamp.tp.dao.LivrableRepository;
+import com.bootcamp.tp.entities.Etat;
 import com.bootcamp.tp.entities.Livrable;
+import com.fasterxml.jackson.databind.ObjectMapper;
+//import static com.fasterxml.jackson.databind.jsonFormatVisitors.JsonValueFormat.URI;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.persistence.Query;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
-@Path("/livrables")
-@Api(value="/livrables",description="Api gérant  les livrables ")
+@Path("/")
+@Api(value = "/livrables", description = "Service qui gere les livrables ")
 public class LivrableRestService {
-	
-	//instanciation d'un livrable repository
 
-	LivrableRepository livrableRepository=new LivrableRepository("tpservice");
+    //instanciation d'un livrable repository
+    LivrableRepository livrableRepository = new LivrableRepository("tpservice");
 
-	@GET
-	@Path("/list")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value="list",
-			notes="List des livrables",
-			response=Livrable.class,
-			responseContainer="Livrable"
-			)
-	@ApiResponses({
-	     @ApiResponse(code=404, message="impossible de lister les livrable")
-	})
-	public Response getList() throws SQLException{
+    @GET
+    @Path("/livrables/verification")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response verificationService(InputStream incomingData) {
+        String result = "LivrableService a bien demarre ";
 
-		List<Livrable> livrables= livrableRepository.findAll();
-		return Response.status(200).entity(livrables).build();
+        // retourner une reponse HTTP 200 en cas de succes
+        return Response.status(200).entity(result).build();
+    }
 
-	}
+    @GET
+    @Path("/livrables")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "list",
+        notes = "List des livrables",
+        response = Livrable.class,
+        responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "impossible de lister les livrable")
+    })
+    public Response getList() throws SQLException {
 
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value="getById",
-			notes="Consultation d'un livrable",
-			response=Livrable.class,
-			responseContainer="Livrable"
-			)
-	@ApiResponses({
-            @ApiResponse(code=200, message="Livrable retrouvé"),
-	    @ApiResponse(code=404, message="Livrable non trouvé")
-	})
-	public Response getById(@PathParam("id") int id) throws SQLException {
+        List<Livrable> livrables = livrableRepository.findAll();
+        
+        if (livrables != null) {
+            return Response.status(200).entity(livrables).build();
+        } else {
+            return Response.status(404).entity("Aucun Livrable trouve ...").build();
+        }
+//                return Response.ok(/* JAXB object to represent response body 
+//                entity */).expires(/* Expires response header 
+//                value*/).header(“CustomHeaderName”, “CustomHeaderValue”).build();
+        //return Response.ok(livrables).header(null, this).build();
 
-		Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", id);
+    }
+    
+    @Path("/livrable/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "getById",
+        notes = "Consultation d'un livrable",
+        response = Livrable.class,
+        responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Livrable retrouve"),
+        @ApiResponse(code = 404, message = "Livrable non trouve")
+    })
+    public Response getById(@PathParam("id") int id) throws SQLException {
 
-		if(livrable != null)
-			return Response.status(200).entity(livrable).build();
-		else
-			return Response.status(404).entity(livrable).build();
-	}
+        Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", id);
 
-	@POST
-	@Path("/create")
-	//    @Produces(MediaType.)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value="create",
-			notes="Ajouter un nouveau livrable",
-			response=Livrable.class,
-			responseContainer="Livrable"
-			)
-	@ApiResponses({
-	     @ApiResponse(code=201, message="Ajout avec succès"),
-	     @ApiResponse(code=404, message="impossible d'ajouter ce livrable")
-	})
-	public Response create(Livrable livrable) {
-		String output = " Félicitations objet créé avec succès : ";
-		try {
-			livrableRepository.create(livrable);
-			return Response.status(200).entity(output + livrable.getReference()).build(); 
-		} catch (SQLException ex) {
-			return Response.status(404).entity("Erreur: Objet non créé").build();
+        if (livrable != null) {
+            return Response.status(200).entity(livrable).build();
+        } else {
+            return Response.status(404).entity("Livrable non trouve ...").build();
+        }
+    }
 
-		}
+    // creation de livrable depuis un fichier Json
+    @Path("/livrable/addlivrable")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createLivrable(InputStream is) {
 
+        StringBuilder livrBuild = new StringBuilder();
 
-	}
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                livrBuild.append(line);
+            }
+        } catch (Exception e) {
+            System.out.println("Erreur du fichier : ");
+        }
+        System.out.println("Donnees recues : \n" + livrBuild.toString());
 
-	@PUT
-	@Path("/update")
-	//    @Produces(MediaType.)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value="update",
-			notes="mettre à jour un livrable",
-			response=Livrable.class,
-			responseContainer="Livrable"
-			)
-	@ApiResponses({
-	     @ApiResponse(code=201, message="Livrable mis à jour avec succès"),
-	     @ApiResponse(code=404, message="Aucun livrable dans la période définie")
-	})
-	public Response update(Livrable livrable) {
-		String output = " Félicitations Mise à jour effectuée avec succès pour : ";
-		try {
-			livrableRepository.update(livrable);
-			return Response.status(200).entity(output + livrable.getReference()).build();
-		} catch (SQLException ex) {
-			return Response.status(404).entity("Erreur: Objet non mis à jour").build();
-		}
+        // retourner une reponse HTTP 200 en cas de succes
+        return Response.status(200).entity(livrBuild.toString()).build();
+    }
+    
+    @POST
+    @Path("/livrable/{id}")
+    //    @Produces(MediaType.)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "Creation",
+        notes = "creation d'un livrable",
+        response = Livrable.class,
+        responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 201, message = "Livrable cree avec succes"),
+        @ApiResponse(code = 404, message = "Aucun livrable cree")
+    })
+    public Response create(@PathParam("id") int idL) {
+        String output = " Felicitations creation effectuee avec succes pour id = ";
+        try {
+            Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", idL);
+            Response reponse = Response.status(200).entity(output + livrable.getIdLivrable()).build();
+            livrableRepository.update(livrable);
+            return reponse;
+        } catch (SQLException ex) {
+            return Response.status(404).entity("Erreur: Objet non cree").build();
+        }
 
+    }
+    
+    @PUT
+    @Path("/livrable/{id}")
+    //    @Produces(MediaType.)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "modification",
+        notes = "mis a jour d'un livrable",
+        response = Livrable.class,
+        responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 201, message = "Livrable mis a jour avec succes"),
+        @ApiResponse(code = 404, message = "Aucune mis a jour effectue")
+    })
+    public Response update(@PathParam("id") int idL) {
+        String output = " Felicitations Mise a jour effectuee avec succes pour id = ";
+        try {
+            Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", idL);
+            Response reponse = Response.status(200).entity(output + livrable.getIdLivrable()).build();
+            livrableRepository.update(livrable);
+            return reponse;
+        } catch (SQLException ex) {
+            return Response.status(404).entity("Erreur: Objet non mis a jour").build();
+        }
 
-	}
-	
-	
-	@DELETE
-	@Path("/delete")
-	//    @Produces(MediaType.)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(
-			value="suppression",
-			notes="Suppression d'un livrable",
-			response=Livrable.class,
-			responseContainer="Livrable"
-			)
-	@ApiResponses({
-	     @ApiResponse(code=201, message="Livrable mis à jour avec succès"),
-	     @ApiResponse(code=404, message="Aucun livrable dans la période définie")
-	})
-	public Response delete(@QueryParam("idL") int idL) {
-		String output = " Félicitations supppression effectuée avec succès pour : ";
-		try {
-			Livrable livrable=livrableRepository.findByPropertyUnique("id", idL);
-			Response reponse=Response.status(200).entity(output + livrable.getReference()).build();
-			livrableRepository.delete(livrable);
-			return reponse;
-		} catch (SQLException ex) {
-			return Response.status(404).entity("Erreur: Objet non mis à jour").build();
-		}
+    }
+    
+    @DELETE
+    @Path("/livrable/{id}")
+    //    @Produces(MediaType.)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "suppression",
+        notes = "Suppression d'un livrable",
+        response = Livrable.class,
+        responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 201, message = "Livrable supprime avec succes"),
+        @ApiResponse(code = 404, message = "Aucun suppression effectue")
+    })
+    public Response delete(@PathParam("id") int idL) {
+        String output = " Felicitations supppression effectuee avec succes pour id = ";
+        try {
+            Livrable livrable = livrableRepository.findByPropertyUnique("idLivrable", idL);
+            Response reponse = Response.status(200).entity(output + livrable.getIdLivrable()).build();
+            livrableRepository.delete(livrable);
+            return reponse;
+        } catch (SQLException ex) {
+            return Response.status(404).entity("Erreur: Objet non supprime").build();
+        }
 
+    }
 
-	}
-	
-	//pagination, token, filters, tri
+    //pagination, token, filters, tri
+
 }

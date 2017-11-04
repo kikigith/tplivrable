@@ -1,0 +1,14 @@
+{
+        "reference": "ref31",
+        "description": "description31",
+        "idLivrable": 31,
+        "objectifs": [
+            "obj1",
+            "obj2"
+        ],
+        "lieux": [
+            "cotonou",
+            "parakou"
+        ],
+        "etat": "realisation"
+    }

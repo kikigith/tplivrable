@@ -22,6 +22,8 @@ import org.json.JSONObject;
 public class MyClient {
 
     public static void main(String[] args) {
+        
+        System.out.print("Hello World ;-)...");
 
 //        String string = "";
 //        try {

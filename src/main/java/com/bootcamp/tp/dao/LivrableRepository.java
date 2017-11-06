@@ -12,40 +12,38 @@ import com.bootcamp.tp.entities.Livrable;
 
 public class LivrableRepository {
 
-	private EntityManager em;
+    private EntityManager em;
     private String persistUnit;
 //    private Livrable livrable;
     private EntityManagerFactory emf;
 
-    
- 
-
     public LivrableRepository(String persistUnit) {
-        
+
         this.persistUnit = persistUnit;
-        emf=Persistence.createEntityManagerFactory(persistUnit);
-        this.em=getEntityManager();
+        emf = Persistence.createEntityManagerFactory(persistUnit);
+        this.em = getEntityManager();
 //        this.livrable=livrable;
 
     }
-    
-     public final EntityManager getEntityManager() {
-        em= emf.createEntityManager();
+
+    public final EntityManager getEntityManager() {
+        em = emf.createEntityManager();
         return em;
-        
+
     }
 
-  /**
-   * methode genetique de creation dans la bdd
-   * @param obj
-   * @return
-   * @throws SQLException 
-   */
+    /**
+     * methode genetique de creation dans la bdd
+     *
+     * @param obj
+     * @return
+     * @throws SQLException
+     */
     public boolean create(Livrable obj) throws SQLException {
         em.getTransaction().begin();
         em.persist(obj);
         em.getTransaction().commit();
-       
+
         return true;
     }
 
@@ -60,7 +58,7 @@ public class LivrableRepository {
         em.getTransaction().begin();
         em.remove(obj);
         em.getTransaction().commit();
-        
+
         return true;
     }
 
@@ -75,15 +73,14 @@ public class LivrableRepository {
         em.getTransaction().begin();
         em.merge(obj);
         em.getTransaction().commit();
-       
+
         return true;
     }
-    
+
     //a revoir
     public Livrable updateById(int id, Object value) throws SQLException {
-        
+
 //          String className = livrable.getSimpleName();
-         
         String request = "select t from Livrable t where t." + id + "=:param";
         Query query = em.createQuery(request);
         query.setParameter("param", value);
@@ -106,39 +103,38 @@ public class LivrableRepository {
         return qry.getResultList();
 
     }
+
     /**
-     * 
+     *
      * @param propertyName
      * @param value
      * @return
-     * @throws SQLException 
+     * @throws SQLException
      */
-      public Livrable findByPropertyUnique(String propertyName, Object value) throws SQLException {
+    public Livrable findByPropertyUnique(String propertyName, Object value) throws SQLException {
         String request = "select t from Livrable t where t." + propertyName + "=:param";
         Query query = getEm().createQuery(request);
         query.setParameter("param", value);
         return (Livrable) query.getSingleResult();
 
     }
-    
-     /*
-	  * M�thode de recherche de tous les objets Livrable
+
+    /*
+     * M�thode de recherche de tous les objets Livrable
      */
-    public  List<Livrable> findAll() throws SQLException{
-       String req="select t from Livrable t";
-       Query query=getEm().createQuery(req);
+    public List<Livrable> findAll() throws SQLException {
+        String req = "select t from Livrable t";
+        Query query = getEm().createQuery(req);
         return query.getResultList();
     }
-    
 
     /**
-     * 
+     *
      * @return the entity manager
      */
     public EntityManager getEm() {
         return em;
     }
-
 
     public EntityManagerFactory getEmf() {
         return emf;
@@ -149,7 +145,7 @@ public class LivrableRepository {
     }
 
     /**
-     * 
+     *
      * @param em to set
      */
     public void setEm(EntityManager em) {
@@ -157,7 +153,7 @@ public class LivrableRepository {
     }
 
     /**
-     * 
+     *
      * @return the persistence unit
      */
     public String getPersistUnit() {
@@ -165,8 +161,8 @@ public class LivrableRepository {
     }
 
     /**
-     * 
-     * @param persistUnit 
+     *
+     * @param persistUnit
      */
     public void setPersistUnit(String persistUnit) {
         this.persistUnit = persistUnit;

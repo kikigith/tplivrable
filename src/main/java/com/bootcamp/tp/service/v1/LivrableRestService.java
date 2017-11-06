@@ -1,4 +1,4 @@
-package com.bootcamp.tp.service;
+package com.bootcamp.tp.service.v1;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -11,53 +11,30 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.bootcamp.tp.dao.LivrableRepository;
-import com.bootcamp.tp.entities.Etat;
 import com.bootcamp.tp.entities.Livrable;
-import com.fasterxml.jackson.databind.ObjectMapper;
-//import static com.fasterxml.jackson.databind.jsonFormatVisitors.JsonValueFormat.URI;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.persistence.Query;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.StreamingOutput;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
-@Path("/")
-@Api(value = "/livrables", description = "Service qui gere les livrables ")
+@Path("/v1/livrables")
+@Api(value = "/v1/livrables", description = "Service qui gere les livrables ")
 public class LivrableRestService {
 
     //instanciation d'un livrable repository
     LivrableRepository livrableRepository = new LivrableRepository("tpservice");
 
     @GET
-    @Path("/livrables/verification")
+    @Path("/verification")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response verificationService(InputStream incomingData) {
+    public Response verificationService(InputStream is) {
         String result = "LivrableService a bien demarre ";
 
         // retourner une reponse HTTP 200 en cas de succes
@@ -65,13 +42,13 @@ public class LivrableRestService {
     }
 
     @GET
-    @Path("/livrables")
+    @Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "list",
-        notes = "List des livrables",
-        response = Livrable.class,
-        responseContainer = "Livrable"
+            value = "list",
+            notes = "List des livrables",
+            response = Livrable.class,
+            responseContainer = "Livrable"
     )
     @ApiResponses({
         @ApiResponse(code = 404, message = "impossible de lister les livrable")
@@ -79,7 +56,7 @@ public class LivrableRestService {
     public Response getList() throws SQLException {
 
         List<Livrable> livrables = livrableRepository.findAll();
-        
+
         if (livrables != null) {
             return Response.status(200).entity(livrables).build();
         } else {
@@ -91,19 +68,20 @@ public class LivrableRestService {
         //return Response.ok(livrables).header(null, this).build();
 
     }
-    
-    @Path("/livrable/{id}")
+
+    @Path("/{id}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "getById",
-        notes = "Consultation d'un livrable",
-        response = Livrable.class,
-        responseContainer = "Livrable"
+            value = "getById",
+            notes = "Consultation d'un livrable",
+            response = Livrable.class,
+            responseContainer = "Livrable"
     )
     @ApiResponses({
         @ApiResponse(code = 200, message = "Livrable retrouve"),
-        @ApiResponse(code = 404, message = "Livrable non trouve")
+        @ApiResponse(code = 404, message = "Livrable non trouve"),
+        @ApiResponse(code = 500, message = "Livrable non trouve")
     })
     public Response getById(@PathParam("id") int id) throws SQLException {
 
@@ -112,12 +90,12 @@ public class LivrableRestService {
         if (livrable != null) {
             return Response.status(200).entity(livrable).build();
         } else {
-            return Response.status(404).entity("Livrable non trouve ...").build();
+            return Response.status(404).entity("Aucun livrable trouve ...").build();
         }
     }
 
     // creation de livrable depuis un fichier Json
-    @Path("/livrable/addlivrable")
+    @Path("/addlivrable")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createLivrable(InputStream is) {
@@ -138,16 +116,16 @@ public class LivrableRestService {
         // retourner une reponse HTTP 200 en cas de succes
         return Response.status(200).entity(livrBuild.toString()).build();
     }
-    
+
     @POST
-    @Path("/livrable/{id}")
-    //    @Produces(MediaType.)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}")
+    //@Produces(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     @ApiOperation(
-        value = "Creation",
-        notes = "creation d'un livrable",
-        response = Livrable.class,
-        responseContainer = "Livrable"
+            value = "Creation",
+            notes = "creation d'un livrable",
+            response = Livrable.class,
+            responseContainer = "Livrable"
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable cree avec succes"),
@@ -165,16 +143,16 @@ public class LivrableRestService {
         }
 
     }
-    
+
     @PUT
-    @Path("/livrable/{id}")
-    //    @Produces(MediaType.)
+    @Path("/{id}")
+    //@Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "modification",
-        notes = "mis a jour d'un livrable",
-        response = Livrable.class,
-        responseContainer = "Livrable"
+            value = "modification",
+            notes = "mis a jour d'un livrable",
+            response = Livrable.class,
+            responseContainer = "Livrable"
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable mis a jour avec succes"),
@@ -192,16 +170,16 @@ public class LivrableRestService {
         }
 
     }
-    
+
     @DELETE
-    @Path("/livrable/{id}")
-    //    @Produces(MediaType.)
+    @Path("/{id}")
+    //@Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "suppression",
-        notes = "Suppression d'un livrable",
-        response = Livrable.class,
-        responseContainer = "Livrable"
+            value = "suppression",
+            notes = "Suppression d'un livrable",
+            response = Livrable.class,
+            responseContainer = "Livrable"
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable supprime avec succes"),
@@ -221,5 +199,4 @@ public class LivrableRestService {
     }
 
     //pagination, token, filters, tri
-
 }

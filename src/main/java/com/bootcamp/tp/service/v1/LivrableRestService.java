@@ -51,7 +51,9 @@ public class LivrableRestService {
             responseContainer = "Livrable"
     )
     @ApiResponses({
-        @ApiResponse(code = 404, message = "impossible de lister les livrable")
+        @ApiResponse(code = 200, message = "Succes"),
+        @ApiResponse(code = 404, message = "Impossible de lister les livrables"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
     })
     public Response getList() throws SQLException {
 
@@ -73,15 +75,15 @@ public class LivrableRestService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-            value = "getById",
-            notes = "Consultation d'un livrable",
+            value = "Voir livrable par Id",
+            notes = "Consultation d'un livrable par son Identifiant",
             response = Livrable.class,
             responseContainer = "Livrable"
     )
     @ApiResponses({
-        @ApiResponse(code = 200, message = "Livrable retrouve"),
-        @ApiResponse(code = 404, message = "Livrable non trouve"),
-        @ApiResponse(code = 500, message = "Livrable non trouve")
+        @ApiResponse(code = 200, message = "Succes"),
+        @ApiResponse(code = 404, message = "Echec : Livrable non trouve"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
     })
     public Response getById(@PathParam("id") int id) throws SQLException {
 
@@ -98,6 +100,18 @@ public class LivrableRestService {
     @Path("/addlivrable")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Voir livrable par Id",
+            notes = "Consultation d'un livrable par son Identifiant",
+            response = Livrable.class,
+            responseContainer = "Livrable"
+    )
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Succes"),
+        @ApiResponse(code = 404, message = "Echec : Livrable non trouve"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
+    })
     public Response createLivrable(InputStream is) {
 
         StringBuilder livrBuild = new StringBuilder();
@@ -129,7 +143,8 @@ public class LivrableRestService {
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable cree avec succes"),
-        @ApiResponse(code = 404, message = "Aucun livrable cree")
+        @ApiResponse(code = 404, message = "Echec : Aucun livrable cree"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
     })
     public Response create(@PathParam("id") int idL) {
         String output = " Felicitations creation effectuee avec succes pour id = ";
@@ -156,7 +171,8 @@ public class LivrableRestService {
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable mis a jour avec succes"),
-        @ApiResponse(code = 404, message = "Aucune mis a jour effectue")
+        @ApiResponse(code = 415, message = "Aucun contenu"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
     })
     public Response update(@PathParam("id") int idL) {
         String output = " Felicitations Mise a jour effectuee avec succes pour id = ";
@@ -183,7 +199,8 @@ public class LivrableRestService {
     )
     @ApiResponses({
         @ApiResponse(code = 201, message = "Livrable supprime avec succes"),
-        @ApiResponse(code = 404, message = "Aucun suppression effectue")
+        @ApiResponse(code = 404, message = "Erreur : Aucun suppression effectue"),
+        @ApiResponse(code = 500, message = "Erreur Serveur")
     })
     public Response delete(@PathParam("id") int idL) {
         String output = " Felicitations supppression effectuee avec succes pour id = ";
